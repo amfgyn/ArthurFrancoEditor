@@ -14,7 +14,8 @@ import {
   X,
   Circle,
   Volume2,
-  VolumeX
+  VolumeX,
+  Maximize
 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 
@@ -294,6 +295,7 @@ export default function App() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedPkgInfo, setSelectedPkgInfo] = useState<number | null>(null);
   const [isMuted, setIsMuted] = useState(true);
+  const [fullscreenVideoUrl, setFullscreenVideoUrl] = useState<string | null>(null);
   const portfolioSectionRef = useRef(null);
   const isPortfolioInView = useInView(portfolioSectionRef, { amount: 0.3 });
 
@@ -391,12 +393,12 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1 }}
-              className="relative flex justify-end md:justify-center items-center h-full w-full pointer-events-none"
+              className="relative flex justify-center items-center h-full w-full pointer-events-none mt-10 md:mt-0"
             >
               <motion.img
                 src="/personagem-hero.png"
                 alt="Arthur Franco - Personagem"
-                className="w-[120%] max-w-none md:w-[130%] lg:w-[140%] drop-shadow-2xl md:-ml-12 lg:-ml-24 scale-110 md:scale-[1.3] origin-right pointer-events-auto"
+                className="w-[150%] max-w-none sm:w-[120%] md:w-[130%] lg:w-[140%] drop-shadow-2xl md:-ml-12 lg:-ml-24 scale-[1.2] md:scale-[1.3] origin-center md:origin-right pointer-events-auto -mt-10 md:mt-0"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.8 }}
@@ -538,12 +540,20 @@ export default function App() {
                             <h3 className="text-3xl md:text-5xl font-display font-medium">{item.title}</h3>
                          </div>
                          {position === "active" && (
-                           <button 
-                             onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
-                             className="absolute bottom-8 right-8 md:bottom-16 md:right-16 z-20 w-12 h-12 rounded-full bg-white/20 hover:bg-white text-white hover:text-dark transition-all flex items-center justify-center backdrop-blur-md cursor-pointer pointer-events-auto"
-                           >
-                             {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                           </button>
+                           <div className="absolute bottom-8 right-8 md:bottom-16 md:right-16 z-20 flex flex-col gap-4 pointer-events-auto">
+                             <button 
+                               onClick={(e) => { e.stopPropagation(); setFullscreenVideoUrl(item.url); }}
+                               className="w-12 h-12 rounded-full bg-white/20 hover:bg-white text-white hover:text-dark transition-all flex items-center justify-center backdrop-blur-md cursor-pointer"
+                             >
+                               <Maximize size={20} />
+                             </button>
+                             <button 
+                               onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                               className="w-12 h-12 rounded-full bg-white/20 hover:bg-white text-white hover:text-dark transition-all flex items-center justify-center backdrop-blur-md cursor-pointer"
+                             >
+                               {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                             </button>
+                           </div>
                          )}
                       </motion.div>
                     );
@@ -684,6 +694,31 @@ export default function App() {
           </div>
         </section>
       </main>
+
+      {/* Fullscreen Video Modal */}
+      <AnimatePresence>
+        {fullscreenVideoUrl && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+          >
+            <button 
+              onClick={() => setFullscreenVideoUrl(null)}
+              className="absolute top-6 right-6 z-50 w-12 h-12 rounded-full bg-white/20 hover:bg-white text-white hover:text-dark transition-all flex items-center justify-center backdrop-blur-md"
+            >
+              <X size={24} />
+            </button>
+            <iframe 
+              src={`https://www.youtube.com/embed/${fullscreenVideoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/)?.[1]}?autoplay=1&controls=1&rel=0`}
+              className="w-full h-full max-w-7xl max-h-[80vh] md:max-h-[90vh]"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Footer */}
       <footer className="py-20 border-t border-leaf/10">
