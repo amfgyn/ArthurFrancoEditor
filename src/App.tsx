@@ -17,7 +17,14 @@ import {
   VolumeX
 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
-import ReactPlayer from 'react-player';
+
+// Add TypeScript declaration for YouTube iframe API
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
 
 const portfolioItems = [
   {
@@ -63,72 +70,146 @@ const PortfolioVideo = ({
   isMuted: boolean,
   onNext: () => void 
 }) => {
-  const [volume, setVolume] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [duration, setDuration] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
+  const volumeRef = useRef(0);
   const triggeredNext = useRef(false);
 
   useEffect(() => {
-     let startTime = performance.now();
-     let startVol = volume;
-     let targetVol = isActive && !isMuted ? 1 : 0;
-     let raf: number;
-     const fadeDuration = 800;
+    // Extract video ID
+    const match = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+    const videoId = match ? match[1] : null;
+    if (!videoId) return;
 
-     if (isActive) {
-        setPlaying(true);
-        triggeredNext.current = false;
-     }
-     
-     const animate = (time: number) => {
-        const elapsed = time - startTime;
-        const progress = Math.min(elapsed / fadeDuration, 1);
-        const newVol = startVol + (targetVol - startVol) * progress;
-        setVolume(newVol);
-        
-        if (progress < 1) {
-           raf = requestAnimationFrame(animate);
-        } else {
-           if (!isActive) setPlaying(false);
+    // Load YouTube API
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      if (firstScriptTag && firstScriptTag.parentNode) {
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      }
+    }
+
+    let isMounted = true;
+    const initPlayer = () => {
+      if (!isMounted || !containerRef.current) return;
+      playerRef.current = new window.YT.Player(containerRef.current, {
+        videoId,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          rel: 0,
+          showinfo: 0,
+          mute: 1
+        },
+        events: {
+          onReady: (event: any) => {
+            if (!isMounted) return;
+            if (isActive) {
+              event.target.playVideo();
+            }
+          },
+          onStateChange: (event: any) => {
+            if (event.data === window.YT.PlayerState.ENDED) {
+              if (!triggeredNext.current) {
+                triggeredNext.current = true;
+                onNext();
+              }
+            }
+          }
         }
-     };
-     raf = requestAnimationFrame(animate);
-     return () => cancelAnimationFrame(raf);
+      });
+    };
+
+    const checkYT = setInterval(() => {
+      if (window.YT && window.YT.Player) {
+        clearInterval(checkYT);
+        initPlayer();
+      }
+    }, 100);
+
+    return () => {
+      isMounted = false;
+      clearInterval(checkYT);
+      if (playerRef.current && playerRef.current.destroy) {
+        playerRef.current.destroy();
+      }
+    };
+  }, [videoUrl]);
+
+  // Handle active state
+  useEffect(() => {
+    if (!playerRef.current || !playerRef.current.playVideo) return;
+    
+    if (isActive) {
+      triggeredNext.current = false;
+      playerRef.current.playVideo();
+    } else {
+      playerRef.current.pauseVideo();
+    }
+  }, [isActive]);
+
+  // Handle fading volume
+  useEffect(() => {
+    if (!playerRef.current || !playerRef.current.setVolume) return;
+
+    let targetVol = isActive && !isMuted ? 100 : 0;
+    let startVol = volumeRef.current;
+    let startTime = performance.now();
+    let raf: number;
+    const fadeDuration = 800;
+
+    const animate = (time: number) => {
+      const elapsed = time - startTime;
+      const progress = Math.min(elapsed / fadeDuration, 1);
+      const newVol = startVol + (targetVol - startVol) * progress;
+      volumeRef.current = newVol;
+      
+      if (newVol === 0) {
+        playerRef.current.mute();
+      } else {
+        playerRef.current.unMute();
+        playerRef.current.setVolume(newVol);
+      }
+      
+      if (progress < 1) {
+        raf = requestAnimationFrame(animate);
+      }
+    };
+    raf = requestAnimationFrame(animate);
+    
+    return () => cancelAnimationFrame(raf);
   }, [isActive, isMuted]);
+
+  // Progress check for auto advance before end
+  useEffect(() => {
+    let interval: any;
+    if (isActive) {
+       interval = setInterval(() => {
+          if (playerRef.current && playerRef.current.getCurrentTime) {
+            const currentTime = playerRef.current.getCurrentTime();
+            const duration = playerRef.current.getDuration();
+            if (duration > 0 && duration - currentTime <= 1.5) {
+               if (!triggeredNext.current) {
+                 triggeredNext.current = true;
+                 onNext();
+               }
+            }
+          }
+       }, 200);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, onNext]);
 
   return (
       <div className="absolute inset-0 w-full h-full bg-dark pointer-events-none flex items-center justify-center overflow-hidden">
-        <div className="w-[200vw] h-[200vh] md:w-[120vw] md:h-[120vh] flex-shrink-0">
-          <ReactPlayer 
-             url={videoUrl} 
-             playing={playing} 
-             volume={volume}
-             muted={isMuted && volume === 0}
-             loop={false}
-             width="100%" 
-             height="100%"
-             style={{ transform: 'scale(1.2)' }}
-             config={{ 
-                youtube: { 
-                   playerVars: { controls: 0, showinfo: 0, rel: 0, disablekb: 1, modestbranding: 1, playsinline: 1 } 
-                } 
-             }}
-             onDuration={(d) => setDuration(d)}
-             onProgress={({ playedSeconds }) => {
-                if (duration > 0 && duration - playedSeconds <= 1.5) {
-                   if (!triggeredNext.current) {
-                      triggeredNext.current = true;
-                      onNext();
-                   }
-                }
-             }}
-             onEnded={() => {
-                if (!triggeredNext.current) {
-                    triggeredNext.current = true;
-                    onNext();
-                }
-             }}
-          />
+        <div className="w-[200vw] h-[200vh] md:w-[120vw] md:h-[120vh] flex-shrink-0" style={{ transform: 'scale(1.2)' }}>
+          <div ref={containerRef} className="w-full h-full" />
         </div>
       </div>
   );
