@@ -462,10 +462,16 @@ export default function App() {
               </motion.div>
             </div>
           </div>
+          {/* Wave Divider Bottom - Sobre Mim → Portfólio */}
+          <div className="relative w-full overflow-hidden leading-none z-0" style={{ marginTop: '-2px' }}>
+            <svg className="relative block w-[calc(100%+1.3px)] h-[60px] md:h-[100px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+              <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C49.1,35.3,153.28,66.86,321.39,56.44Z" fill="#1a1a1a"></path>
+            </svg>
+          </div>
         </section>
 
         {/* Section: Portfolio (Netflix style) */}
-        <section id="portfólio" ref={portfolioSectionRef} className="relative py-20 md:py-0 md:min-h-screen flex flex-col justify-center overflow-hidden bg-dark text-white">
+        <section id="portfólio" ref={portfolioSectionRef} className="relative flex flex-col overflow-hidden bg-dark text-white" style={{ paddingTop: '80px', paddingBottom: '80px' }}>
           {/* Título da Seção como Overlay Cinematográfico */}
           <div className="absolute top-10 left-6 md:top-20 md:left-20 z-30 pointer-events-none">
             <motion.div
@@ -558,22 +564,29 @@ export default function App() {
                 <ChevronRight size={32} />
               </button>
             </div>
+          </div>
 
-            {/* Pagination Dots */}
-            <div className="flex justify-center gap-4 mt-20">
-              {portfolioItems.map((_, i) => (
-                <button 
-                  key={i}
-                  onClick={() => setActiveIndex(i)}
-                  className={`transition-all duration-500 ${i === activeIndex ? 'w-12 h-2 bg-brand rounded-full' : 'w-2 h-2 bg-white/20 rounded-full'}`}
-                />
-              ))}
-            </div>
+          {/* Pagination Dots - dentro da seção, abaixo do carrossel */}
+          <div className="flex justify-center gap-4 pt-8 pb-4 z-20 relative">
+            {portfolioItems.map((_, i) => (
+              <button 
+                key={i}
+                onClick={() => setActiveIndex(i)}
+                className={`transition-all duration-500 ${i === activeIndex ? 'w-12 h-2 bg-brand rounded-full' : 'w-2 h-2 bg-white/30 rounded-full hover:bg-white/60'}`}
+              />
+            ))}
+          </div>
+
+          {/* Wave Divider Bottom - Portfólio → Planos */}
+          <div className="relative w-full overflow-hidden leading-none" style={{ marginBottom: '-2px' }}>
+            <svg className="relative block w-[calc(100%+1.3px)] h-[60px] md:h-[100px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+              <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" fill="#f5f4f0"></path>
+            </svg>
           </div>
         </section>
 
         {/* Section: Packages */}
-        <section id="planos" className="py-32 bg-off-white">
+        <section id="planos" className="pt-10 pb-0 bg-off-white relative">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
               <h2 className="text-4xl md:text-5xl font-display font-medium mb-12 text-dark">Pacotes de Edição</h2>
@@ -643,6 +656,13 @@ export default function App() {
                 </motion.div>
               ))}
             </div>
+          </div>
+
+          {/* Wave Divider Bottom - Planos → CTA */}
+          <div className="relative w-full overflow-hidden leading-none mt-20" style={{ marginBottom: '-2px' }}>
+            <svg className="relative block w-[calc(100%+1.3px)] h-[60px] md:h-[100px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+              <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C49.1,35.3,153.28,66.86,321.39,56.44Z" fill="#DEDCD4"></path>
+            </svg>
           </div>
         </section>
 
